@@ -1,0 +1,73 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - epel-release
+      - openvpn
+      - easy-rsa
+      - policycoreutils-python
+
+  - name: Change the openvpn_t server to permissive
+    selinux_permissive:
+      name: openvpn_t
+      permissive: true
+
+- hosts: server
+  become: yes
+  tasks:
+  - name: Copy server.conf
+    copy:
+      src: server.conf
+      dest: /etc/openvpn/server/server.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Generate certificates
+    script:
+      ras.sh
+
+  - name: Copy client.crt
+    copy:
+      src: client.crt
+      dest: /etc/openvpn/pki/issued/client.crt
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Copy client.key
+    copy:
+      src: client.key
+      dest: /etc/openvpn/pki/private/client.key
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Start openvpn service
+    systemd:
+      state: started
+      name: openvpn-server@server
+      enabled: yes
+
+- hosts: client
+  become: yes
+  tasks:
+  - name: Copy client.conf
+    copy:
+      src: client.conf
+      dest: /etc/openvpn/client/client.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Start openvpn service
+    systemd:
+      state: started
+      name: openvpn-client@client
+      enabled: yes
+
