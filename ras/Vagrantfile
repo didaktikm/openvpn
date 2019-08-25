@@ -5,21 +5,22 @@
 MACHINES = {
   :"server" => {
     :box_name => "centos/7",
-    :ip_addr => "172.20.10.50",
+    :ip_addr => "172.20.10.55",
     :memory => "256",
     :shell => "server.sh",
-    :ansible => "playbook.yml"
+    :ansible => "server.yml"
   },
   :"client" => {
     :box_name => "centos/7",
-    :ip_addr => "172.20.10.51",
+    :ip_addr => "172.20.10.56",
     :memory => "256",
     :shell => "client.sh",
-    :ansible => "playbook.yml"
+    :ansible => "client.yml"
   }
 }
 
 Vagrant.configure("2") do |config|
+  config.vm.synced_folder ".", "/vagrant", type: "virtualbox"
 
   MACHINES.each do |boxname, boxconfig|
 

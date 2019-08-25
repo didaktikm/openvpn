@@ -1,0 +1,51 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - epel-release
+      - openvpn
+      - easy-rsa
+      - policycoreutils-python
+
+  - name: Copy client.conf
+    copy:
+      src: client.conf
+      dest: /etc/openvpn/client/client.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Copy ca.crt
+    copy:
+      src: ca.crt
+      dest: /etc/openvpn/client/ca.crt
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Copy client1.crt
+    copy:
+      src: client1.crt
+      dest: /etc/openvpn/client/client1.crt
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Copy client1.key
+    copy:
+      src: client1.key
+      dest: /etc/openvpn/client/client1.key
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Start openvpn service
+    systemd:
+      state: started
+      name: openvpn-client@client
+      enabled: yes

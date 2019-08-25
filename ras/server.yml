@@ -1,0 +1,73 @@
+---
+- hosts: all
+  become: yes
+  tasks:
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+    vars:
+      packages:
+      - epel-release
+      - openvpn
+      - easy-rsa
+      - policycoreutils-python
+
+  - name: Change the openvpn_t server to permissive
+    selinux_permissive:
+      name: openvpn_t
+      permissive: true
+
+  - name: Copy server.conf
+    copy:
+      src: server.conf
+      dest: /etc/openvpn/server/server.conf
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: Gen cert and keys
+    shell: |
+      /usr/share/easy-rsa/3/easyrsa --batch init-pki
+      /usr/share/easy-rsa/3/easyrsa --batch build-ca nopass
+      /usr/share/easy-rsa/3/easyrsa --batch gen-dh
+      /usr/share/easy-rsa/3/easyrsa --batch --req-cn={{ ansible_facts['hostname'] }} --req-c=RU --req-st=State --req-city=Moscow --req-org=HOME --req-email=p.shekur@otus.ru --req-ou=OTUS gen-req server nopass
+      /usr/share/easy-rsa/3/easyrsa --batch sign-req server server 
+      /usr/share/easy-rsa/3/easyrsa --batch --req-cn=client1 --req-c=RU --req-st=State --req-city=Moscow --req-org=HOME --req-email=p.shekur@otus.ru --req-ou=OTUS gen-req client1 nopass
+      /usr/share/easy-rsa/3/easyrsa --batch sign-req client client1
+      cp /etc/openvpn/pki/ca.crt /vagrant/
+      cp /etc/openvpn/pki/issued/client1.crt /vagrant/
+      cp /etc/openvpn/pki/private/client1.key /vagrant/
+    args:
+      chdir: /etc/openvpn/
+
+  # - name: Copy ca.crt
+  #   copy:
+  #     src: /etc/openvpn/pki/ca.crt
+  #     dest: /vagrant/ca.crt
+  #     remote_src: yes
+  #     follow: yes
+  #     owner: root
+  #     group: root
+  #     mode: '0644'
+
+  # - name: Copy client.crt
+  #   copy:
+  #     src: /etc/openvpn/pki/issued/client.crt
+  #     dest: /vagrant/client.crt
+  #     owner: root
+  #     group: root
+  #     mode: '0644'
+
+  # - name: Copy client1.key
+  #   copy:
+  #     src: /etc/openvpn/pki/private/client1.key
+  #     dest: /vagrant/client1.key
+  #     owner: root
+  #     group: root
+  #     mode: '0644'
+
+  - name: Start openvpn service
+    systemd:
+      state: started
+      name: openvpn-server@server
+      enabled: yes
