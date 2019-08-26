@@ -40,31 +40,18 @@
     args:
       chdir: /etc/openvpn/
 
-  # - name: Copy ca.crt
-  #   copy:
-  #     src: /etc/openvpn/pki/ca.crt
-  #     dest: /vagrant/ca.crt
-  #     remote_src: yes
-  #     follow: yes
-  #     owner: root
-  #     group: root
-  #     mode: '0644'
-
-  # - name: Copy client.crt
-  #   copy:
-  #     src: /etc/openvpn/pki/issued/client.crt
-  #     dest: /vagrant/client.crt
-  #     owner: root
-  #     group: root
-  #     mode: '0644'
-
-  # - name: Copy client1.key
-  #   copy:
-  #     src: /etc/openvpn/pki/private/client1.key
-  #     dest: /vagrant/client1.key
-  #     owner: root
-  #     group: root
-  #     mode: '0644'
+# name: Copy client cert
+#      fetch:
+#        src: "{{ item }}"
+#        dest: ./clients_certs/
+#        flat: yes
+#        fail_on_missing: no
+#      with_items:
+#        - /etc/openvpn/pki/ca.crt
+#        - /etc/openvpn/pki/ta.key
+#        - /etc/openvpn/pki/issued/client1.crt
+#        - /etc/openvpn/pki/private/client1.key
+#    when: ansible_hostname == "openvpn-server"
 
   - name: Start openvpn service
     systemd:
